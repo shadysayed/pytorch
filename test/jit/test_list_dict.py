@@ -1,6 +1,7 @@
 import os
 import sys
 import unittest
+import inspect
 from typing import List, Dict
 from textwrap import dedent
 from collections import OrderedDict
@@ -96,6 +97,32 @@ class TestList(JitTestCase):
             return
         with self.assertRaisesRegex(RuntimeError, "previously has type"):
             self.checkScript(reassign_nested, (), optimize=False)
+
+    def test_del(self):
+        def inputs():
+            return [1, 2, 3, 4]
+
+        def fn(x):
+            # type: (List[int]) -> List[int]
+            del x[1]
+            return x
+
+        python_out = fn(inputs())
+        # checkScript reuses the same object, but here it's being mutated so do
+        # it manually
+        cu = torch.jit.CompilationUnit()
+        cu.define(dedent(inspect.getsource(fn)))
+        self.assertEqual(cu.fn(inputs()), python_out)
+        self.assertEqual(torch.jit.script(fn)(inputs()), python_out)
+
+        @torch.jit.script
+        def fn2(x):
+            # type: (List[int]) -> List[int]
+            del x[100]
+            return x
+
+        with self.assertRaisesRegex(RuntimeError, "out of range"):
+            fn2([])
 
     def test_min_bool_list(self):
         def jit_min_list(a, b):
@@ -851,6 +878,25 @@ class TestDict(JitTestCase):
 
     def dict2(self):
         return {'x': torch.ones(1) + 100, 'y': torch.ones(1) + 101, 'z': torch.ones(1) + 102}
+
+    def test_del(self):
+        def inputs():
+            return {'hi': 2, 'bye': 3}
+
+        def fn(x):
+            # type: (Dict[str, int]) -> Dict[str, int]
+            del x['hi']
+            return x
+
+        python_out = fn(inputs())
+        # checkScript reuses the same object, but here it's being mutated so do
+        # it manually
+        cu = torch.jit.CompilationUnit()
+        cu.define(dedent(inspect.getsource(fn)))
+        self.assertEqual(cu.fn(inputs()), python_out)
+        self.assertEqual(torch.jit.script(fn)(inputs()), python_out)
+        with self.assertRaisesRegex(RuntimeError, "KeyError"):
+            self.checkScript(fn, [{}])
 
     def test_keys(self):
         @torch.jit.script
