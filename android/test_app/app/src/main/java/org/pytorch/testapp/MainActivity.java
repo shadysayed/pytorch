@@ -11,6 +11,7 @@ import android.widget.TextView;
 import org.pytorch.IValue;
 import org.pytorch.Module;
 import org.pytorch.Tensor;
+import org.pytorch.torchvision.PytorchVision;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -46,9 +47,9 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void run() {
           handleResult(result);
-          if (mBackgroundHandler != null) {
-            mBackgroundHandler.post(mModuleForwardRunnable);
-          }
+//          if (mBackgroundHandler != null) {
+//            mBackgroundHandler.post(mModuleForwardRunnable);
+//          }
         }
       });
     }
@@ -127,19 +128,6 @@ public class MainActivity extends AppCompatActivity {
       Log.e(TAG, "Error process asset " + assetName + " to file path");
     }
     return null;
-  }
-
-  static class Result {
-
-    private final float[] scores;
-    private final long totalDuration;
-    private final long moduleForwardDuration;
-
-    public Result(float[] scores, long moduleForwardDuration, long totalDuration) {
-      this.scores = scores;
-      this.moduleForwardDuration = moduleForwardDuration;
-      this.totalDuration = totalDuration;
-    }
   }
 
   @UiThread
