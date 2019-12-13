@@ -277,6 +277,7 @@ public final class TensorImageUtils {
         int r = clamp((a0 + a1) >> 10, 0, 255);
         int g = clamp((a0 - a2 - a3) >> 10, 0, 255);
         int b = clamp((a0 + a4) >> 10, 0, 255);
+
         final int offset = outBufferOffset + y * tensorWidth + x;
         float rF = ((r / 255.f) - normMeanRGB[0]) / normStdRGB[0];
         float gF = ((g / 255.f) - normMeanRGB[1]) / normStdRGB[1];

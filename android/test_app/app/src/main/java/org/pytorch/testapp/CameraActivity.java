@@ -2,6 +2,7 @@ package org.pytorch.testapp;
 
 import android.Manifest;
 import android.content.pm.PackageManager;
+import android.media.Image;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
@@ -27,11 +28,12 @@ import androidx.core.app.ActivityCompat;
 import org.pytorch.IValue;
 import org.pytorch.Module;
 import org.pytorch.Tensor;
-import org.pytorch.torchvision.PytorchVision;
+import org.pytorch.torchvision.PyTorchVision;
 import org.pytorch.torchvision.TensorImageUtils;
 
 import java.io.File;
 import java.nio.FloatBuffer;
+import java.util.Arrays;
 
 public class CameraActivity extends AppCompatActivity {
   private static final String TAG = BuildConfig.LOGCAT_TAG;
@@ -143,7 +145,12 @@ public class CameraActivity extends AppCompatActivity {
               return;
             }
 
+            if (done) {
+              return;
+            }
+
             final Result result = CameraActivity.this.analyzeImage(image, rotationDegrees);
+//            done = true;
             if (result != null) {
               mLastAnalysisResultTime = SystemClock.elapsedRealtime();
               CameraActivity.this.runOnUiThread(new Runnable() {
@@ -162,12 +169,12 @@ public class CameraActivity extends AppCompatActivity {
   private Module mModule;
   private FloatBuffer mInputTensorBuffer;
   private Tensor mInputTensor;
+  private boolean done = false;
 
   @WorkerThread
   @Nullable
   protected Result analyzeImage(ImageProxy image, int rotationDegrees) {
     Log.i(TAG, String.format("analyzeImage(%s, %d)", image, rotationDegrees));
-
     if (mModule == null) {
       final String moduleFileAbsoluteFilePath = new File(
           MainActivity.assetFilePath(this, BuildConfig.MODULE_ASSET_NAME)).getAbsolutePath();
@@ -176,15 +183,23 @@ public class CameraActivity extends AppCompatActivity {
       mInputTensor = Tensor.fromBlob(mInputTensorBuffer, new long[]{1, 3, 224, 224});
     }
 
-    PytorchVision.putImage(image.getImage());
-
     final long startTime = SystemClock.elapsedRealtime();
-    TensorImageUtils.imageYUV420CenterCropToFloatBuffer(
-        image.getImage(), rotationDegrees,
-        224, 224,
-        TensorImageUtils.TORCHVISION_NORM_MEAN_RGB,
-        TensorImageUtils.TORCHVISION_NORM_STD_RGB,
-        mInputTensorBuffer, 0);
+    if (BuildConfig.TU_TYPE == 0) {
+      TensorImageUtils.imageYUV420CenterCropToFloatBuffer(
+          image.getImage(), rotationDegrees,
+          224, 224,
+          TensorImageUtils.TORCHVISION_NORM_MEAN_RGB,
+          TensorImageUtils.TORCHVISION_NORM_STD_RGB,
+          mInputTensorBuffer, 0);
+    } else {
+      PyTorchVision.imageYUV420CenterCropToFloatBuffer(
+          image.getImage(), rotationDegrees, 224, 224,
+          TensorImageUtils.TORCHVISION_NORM_MEAN_RGB,
+          TensorImageUtils.TORCHVISION_NORM_STD_RGB,
+          mInputTensorBuffer, 0);
+    }
+    final long tensorPrepDuration = SystemClock.elapsedRealtime() - startTime;
+    Log.i(TAG, String.format("III tensorPrepDrtn:%d", tensorPrepDuration));
 
     final long moduleForwardStartTime = SystemClock.elapsedRealtime();
     final Tensor outputTensor = mModule.forward(IValue.from(mInputTensor)).toTensor();
@@ -197,7 +212,10 @@ public class CameraActivity extends AppCompatActivity {
 
   @UiThread
   protected void handleResult(Result result) {
-    String message = String.format("forwardDuration:%d", result.moduleForwardDuration);
+    int ixs[] = Utils.topK(result.scores, 1);
+    String message = String.format("AAA fwdDrtn:%d class:%s",
+        result.moduleForwardDuration,
+        Constants.IMAGENET_CLASSES[ixs[0]]);
     Log.i(TAG, message);
     mTextViewStringBuilder.insert(0, '\n').insert(0, message);
     if (mTextViewStringBuilder.length() > TEXT_TRIM_SIZE) {

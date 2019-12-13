@@ -49,6 +49,15 @@ android {
             buildConfigField ("String", "MODULE_ASSET_NAME", buildConfigProps('MODULE_ASSET_NAME_MOBNET2_QUANT'))
             addManifestPlaceholders([APP_NAME: "MBQ_CAMERA", MAIN_ACTIVITY: "org.pytorch.testapp.CameraActivity"])
             buildConfigField ("String", "LOGCAT_TAG", "\"pytorch-mbqCamera\"")
+            buildConfigField ("int", "TU_TYPE", "0")
+        }
+        mbqCamera1 {
+            dimension "model"
+            applicationIdSuffix ".mbqCamera1"
+            buildConfigField ("String", "MODULE_ASSET_NAME", buildConfigProps('MODULE_ASSET_NAME_MOBNET2_QUANT'))
+            addManifestPlaceholders([APP_NAME: "MBQ_CAMERA1", MAIN_ACTIVITY: "org.pytorch.testapp.CameraActivity"])
+            buildConfigField ("String", "LOGCAT_TAG", "\"pytorch-mbqCamera1\"")
+            buildConfigField ("int", "TU_TYPE", "1")
         }
         resnet18 {
             dimension "model"

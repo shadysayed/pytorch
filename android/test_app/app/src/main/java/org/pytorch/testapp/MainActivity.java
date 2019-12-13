@@ -11,7 +11,6 @@ import android.widget.TextView;
 import org.pytorch.IValue;
 import org.pytorch.Module;
 import org.pytorch.Tensor;
-import org.pytorch.torchvision.PytorchVision;
 
 import java.io.File;
 import java.io.FileOutputStream;
