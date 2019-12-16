@@ -1645,7 +1645,7 @@ int listPop(Stack& stack) {
   const int64_t normalized_idx = normalizeIndex(idx, list_size);
 
   if (list_size == 0) {
-    AT_ERROR("pop from empty list");
+    AT_ERROR("pop index out of range");
   }
 
   push(stack, getItem(list, idx));
@@ -1664,12 +1664,8 @@ int listClear(Stack& stack) {
 
 template <typename T>
 int listDelete(Stack& stack) {
-  auto idx = pop(stack).toInt();
-  c10::List<T> list = pop(stack).to<c10::List<T>>();
-  if (idx > int64_t(list.size()) - 1) {
-    AT_ERROR("list assignment index out of range");
-  }
-  list.erase(list.begin() + idx);
+  listPop<T>(stack);
+  pop(stack);
   return 0;
 }
 
@@ -2243,19 +2239,6 @@ int dictSetDefault(Stack& stack) {
   return 0;
 }
 
-int dictDelete(Stack& stack) {
-  auto key = pop(stack);
-  auto dict = pop(stack).toGenericDict();
-  auto value = dict.find(key);
-  if (value == dict.end()) {
-    AT_ERROR("KeyError: ", key);
-  } else {
-    auto num_removed = dict.erase(key);
-    AT_ASSERT(num_removed != 0);
-  }
-  return 0;
-}
-
 template<bool has_default>
 int dictPop(Stack& stack) {
   IValue default_value;
@@ -2278,6 +2261,13 @@ int dictPop(Stack& stack) {
     TORCH_CHECK(
         erase_count == 1, "Expected to erase 1 item, found ", erase_count);
   }
+  return 0;
+}
+
+int dictDelete(Stack& stack) {
+  dictPop<false>(stack);
+  // pop pushes an item on the stack but delete does not, so get rid of it
+  pop(stack);
   return 0;
 }
 
