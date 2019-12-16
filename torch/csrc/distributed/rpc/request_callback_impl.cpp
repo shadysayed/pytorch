@@ -49,7 +49,15 @@ std::shared_ptr<FutureMessage> RequestCallbackImpl::processRpc(
 
       // sc is only alive within this block, use reference to avoid copy
       auto& stack = scriptCall.stackRef();
-      scriptCall.op()->getOperation()(stack);
+      at::IValue res;
+      if (scriptCall.hasOp()) {
+        scriptCall.op()->getOperation()(stack);
+      } else {
+        PythonRpcHandler::getInstance()
+            .jitCompilationUnit()
+            ->get_function(scriptCall.qualifiedName())
+            .run(stack);
+      }
 
       TORCH_INTERNAL_ASSERT(
           stack.size() == 1,
@@ -263,7 +271,7 @@ std::shared_ptr<FutureMessage> RequestCallbackImpl::processRpc(
           false, "Request type ", messageType, " not supported.");
     }
   }
-}
+} // namespace rpc
 
 std::shared_ptr<FutureMessage> RequestCallbackImpl::processMessage(
     Message& request) const {
