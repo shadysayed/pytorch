@@ -547,9 +547,9 @@ struct ParserImpl {
       }
       case TK_DELETE: {
         L.expect(TK_DELETE);
-        auto subscript = Subscript(parseSubscriptExp());
+        auto expr = parseExp();
         L.expect(TK_NEWLINE);
-        return Delete::create(subscript);
+        return Delete::create(expr);
       }
       default: {
         auto lhs = parseExpOrExpTuple();

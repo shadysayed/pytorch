@@ -171,8 +171,8 @@ void initTreeViewBindings(PyObject* module) {
       }));
 
   py::class_<Delete, Stmt>(m, "Delete")
-      .def(py::init([](Subscript subscript) {
-        return Delete::create(subscript);
+      .def(py::init([](Expr expr) {
+        return Delete::create(expr);
       }));
 
   py::class_<Assign, Stmt>(m, "Assign")

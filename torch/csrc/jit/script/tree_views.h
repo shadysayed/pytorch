@@ -1031,7 +1031,7 @@ struct Delete : public Stmt {
   Expr expr() const {
     return Expr(subtree(0));
   }
-  static Delete create(const Subscript& value) {
+  static Delete create(const Expr& value) {
     return Delete(Compound::create(TK_DELETE, value.range(), {value}));
   }
 };

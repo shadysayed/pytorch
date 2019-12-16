@@ -891,6 +891,11 @@ struct to_ir {
   }
 
   void emitDelete(const Delete& stmt) {
+    if (stmt.expr().kind() != TK_SUBSCRIPT) {
+      throw ErrorReport(stmt.range())
+          << "del statements are only supported for list"
+             " and dict item deletion";
+    }
     Subscript subscript(stmt.expr());
     const List<Expr>& subscript_exprs = subscript.subscript_exprs();
     const SugaredValuePtr sv = emitSugaredExpr(subscript.value(), 1);

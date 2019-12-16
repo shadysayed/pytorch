@@ -124,6 +124,11 @@ class TestList(JitTestCase):
         with self.assertRaisesRegex(RuntimeError, "out of range"):
             fn2([])
 
+        with self.assertRaisesRegex(RuntimeError, "only supported for list and dict"):
+            @torch.jit.script
+            def fn(x):
+                del x
+
     def test_min_bool_list(self):
         def jit_min_list(a, b):
             # type: (List[bool], List[bool]) -> List[bool]
