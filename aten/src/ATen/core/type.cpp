@@ -120,6 +120,10 @@ OptionalTypePtr OptionalType::ofTensor() {
   static auto value = OptionalType::create(TensorType::get());
   return value;
 }
+PyObjectTypePtr PyObjectType::get() {
+  static auto value = PyObjectType::create();
+  return value;
+}
 CapsuleTypePtr CapsuleType::get() {
   static auto value = CapsuleType::create();
   return value;
