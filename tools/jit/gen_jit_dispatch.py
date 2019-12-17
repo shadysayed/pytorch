@@ -162,21 +162,17 @@ auto result_ = (${first}).${name}(${args_with_tensor_options});
 """)
 
 CONSTRUCTOR = CodeTemplate("""\
-[](Stack & stack) {
+[](OperatorKernel*, const OperatorHandle&, Stack* stack) {
     ${lvalues}
     ${call}
-    drop(stack, ${num_inputs});
-    pack(stack, std::move(result_));
-    return 0;
+    drop(*stack, ${num_inputs});
+    pack(*stack, std::move(result_));
 }
 """)
 
 OPERATOR = CodeTemplate("""\
-Operator(
-    "${signature}",
-    ${op},
-    atenOperatorOptions()
-),
+  .op("${signature}",
+    ${op})
 """)
 
 
@@ -328,7 +324,7 @@ def gen_jit_dispatch(declarations, out, template_path, disable_autograd=False, s
         op_capture = ''
         order = argument_order(decl)
         for i, arg in enumerate(decl['arguments']):
-            value = from_ivalue(arg, '(std::move(peek(stack, {}, {})))'.format(order[i], num_inputs))
+            value = from_ivalue(arg, '(std::move(peek(*stack, {}, {})))'.format(order[i], num_inputs))
             if requires_lvalue(arg):
                 lvalues.append('auto {} = {};\n'.format(arg['name'], value))
                 value = arg['name']
