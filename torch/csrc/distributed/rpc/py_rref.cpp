@@ -11,7 +11,7 @@ namespace distributed {
 namespace rpc {
 ///////////////////////////  PyRRef  //////////////////////////////////
 
-PyRRef::PyRRef(std::shared_ptr<RRef> rref) : rref_(std::move(rref)) {
+PyRRef::PyRRef(std::shared_ptr<RRefBase> rref) : rref_(std::move(rref)) {
   TORCH_CHECK(rref_, "PyRRef must not wrap nullptr");
 }
 
@@ -109,7 +109,7 @@ py::tuple PyRRef::pickle() const {
 PyRRef PyRRef::unpickle(const py::tuple& t) {
   auto& ctx = RRefContext::getInstance();
   auto rfd = RRefForkData::fromPyTuple(t.cast<py::tuple>());
-  std::shared_ptr<RRef> rref = nullptr;
+  std::shared_ptr<RRefBase> rref = nullptr;
   jit::script::ScriptTypeParser typeParser;
   TypePtr rref_type = typeParser.parseType(rfd.type_str_);
   rref = ctx.getOrCreateRRef(rfd, rref_type);
